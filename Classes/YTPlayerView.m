@@ -869,7 +869,14 @@ NSString static *const kYTPlayerSyndicationRegexPattern = @"^https://tpc.googles
  * @param completionHandler A block to invoke when script evaluation completes or fails.
  */
 - (void)stringFromEvaluatingJavaScript:(NSString *)jsToExecute completionHandler:(void (^)(NSString *resultString, NSError *error))completionHandler {
-    [self.webView evaluateJavaScript:jsToExecute completionHandler:completionHandler];
+    [self.webView evaluateJavaScript:jsToExecute completionHandler:^(id _Nullable result, NSError * _Nullable error) {
+        if(completionHandler != nil) {
+            if([result isKindOfClass:[NSNumber class]]) {
+                result = [(NSNumber *)result stringValue];
+            }
+            completionHandler(result, error);
+        }
+    }];
 }
 
 /**
