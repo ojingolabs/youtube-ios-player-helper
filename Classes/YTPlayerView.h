@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #import <UIKit/UIKit.h>
+#import <WebKit/WebKit.h>
 
 @class YTPlayerView;
 
@@ -138,9 +139,9 @@ typedef NS_ENUM(NSInteger, YTPlayerError) {
  * YTPlayerView::loadWithPlaylistId: or their variants to set the video or playlist
  * to populate the view with.
  */
-@interface YTPlayerView : UIView<UIWebViewDelegate>
+@interface YTPlayerView : UIView<WKNavigationDelegate>
 
-@property(nonatomic, strong, nullable, readonly) UIWebView *webView;
+@property(nonatomic, strong, nullable, readonly) WKWebView *webView;
 
 /** A delegate to be notified on playback events. */
 @property(nonatomic, weak, nullable) id<YTPlayerViewDelegate> delegate;
@@ -508,10 +509,8 @@ typedef NS_ENUM(NSInteger, YTPlayerError) {
  * speeds, and 1.5 or 2.0 for faster speeds. This method corresponds to the
  * JavaScript API defined here:
  *   https://developers.google.com/youtube/iframe_api_reference#getPlaybackRate
- *
- * @return An integer value between 0 and 100 representing the current volume.
  */
-- (float)playbackRate;
+- (void)requestPlaybackRate:(void (^)(float rate))completion;
 
 /**
  * Sets the playback rate. The default value is 1.0, which represents a video
@@ -531,10 +530,8 @@ typedef NS_ENUM(NSInteger, YTPlayerError) {
  * YTPlayerView::setPlaybackRate. This method corresponds to the
  * JavaScript API defined here:
  *   https://developers.google.com/youtube/iframe_api_reference#getPlaybackRate
- *
- * @return An NSArray containing available playback rates. nil if there is an error.
  */
-- (nullable NSArray *)availablePlaybackRates;
+- (void)requestAvailablePlaybackRates:(void (^)(NSArray *rates))completion;
 
 #pragma mark - Setting playback behavior for playlists
 
@@ -568,28 +565,28 @@ typedef NS_ENUM(NSInteger, YTPlayerError) {
  * JavaScript API defined here:
  *   https://developers.google.com/youtube/iframe_api_reference#getVideoLoadedFraction
  *
- * @return A float value between 0 and 1 representing the percentage of the video
+ * @param completion block with a float value between 0 and 1 representing the percentage of the video
  *         already loaded.
  */
-- (float)videoLoadedFraction;
+- (void)requestVideoLoadedFraction:(void (^)(float))completion;
 
 /**
  * Returns the state of the player. This method corresponds to the
  * JavaScript API defined here:
  *   https://developers.google.com/youtube/iframe_api_reference#getPlayerState
  *
- * @return |YTPlayerState| representing the state of the player.
+ * @param completion block with |YTPlayerState| representing the state of the player.
  */
-- (YTPlayerState)playerState;
+- (void)requestPlayerState:(void (^)(YTPlayerState))completion;
 
 /**
  * Returns the elapsed time in seconds since the video started playing. This
  * method corresponds to the JavaScript API defined here:
  *   https://developers.google.com/youtube/iframe_api_reference#getCurrentTime
  *
- * @return Time in seconds since the video started playing.
+ * @param completion block with Time in seconds since the video started playing
  */
-- (float)currentTime;
+- (void)requestCurrentTime:(void (^)(float))completion;
 
 #pragma mark - Playback quality
 
@@ -602,9 +599,9 @@ typedef NS_ENUM(NSInteger, YTPlayerError) {
  * JavaScript API defined here:
  *   https://developers.google.com/youtube/iframe_api_reference#getPlaybackQuality
  *
- * @return YTPlaybackQuality representing the current playback quality.
+ * @param completion block with YTPlaybackQuality representing the current playback quality.
  */
-- (YTPlaybackQuality)playbackQuality;
+- (void)requestPlaybackQuality:(void (^)(YTPlaybackQuality))completion;
 
 /**
  * Suggests playback quality for the video. It is recommended to leave this setting to
@@ -621,9 +618,9 @@ typedef NS_ENUM(NSInteger, YTPlayerError) {
  * JavaScript API defined here:
  *   https://developers.google.com/youtube/iframe_api_reference#getAvailableQualityLevels
  *
- * @return An NSArray containing available playback quality levels. Returns nil if there is an error.
+ * @param completion block with An NSArray containing available playback quality levels. Returns nil if there is an error.
  */
-- (nullable NSArray *)availableQualityLevels;
+- (void)requestAvailableQualityLevels:(void (^)(NSArray * _Nullable))completion;
 
 #pragma mark - Retrieving video information
 
@@ -636,27 +633,27 @@ typedef NS_ENUM(NSInteger, YTPlayerError) {
  * method corresponds to the JavaScript API defined here:
  *   https://developers.google.com/youtube/iframe_api_reference#getDuration
  *
- * @return Length of the video in seconds.
+ * @param completion block with Length of the video in seconds.
  */
-- (NSTimeInterval)duration;
+- (void)requestDuration:(void (^)(NSTimeInterval))completion;
 
 /**
  * Returns the YouTube.com URL for the video. This method corresponds
  * to the JavaScript API defined here:
  *   https://developers.google.com/youtube/iframe_api_reference#getVideoUrl
  *
- * @return The YouTube.com URL for the video. Returns nil if no video is loaded yet.
+ * @param completion block with The YouTube.com URL for the video. Returns nil if no video is loaded yet.
  */
-- (nullable NSURL *)videoUrl;
+- (void)requestVideoUrl:(void (^)(NSURL * _Nullable))completion;
 
 /**
  * Returns the embed code for the current video. This method corresponds
  * to the JavaScript API defined here:
  *   https://developers.google.com/youtube/iframe_api_reference#getVideoEmbedCode
  *
- * @return The embed code for the current video. Returns nil if no video is loaded yet.
+ * @param completion block with The embed code for the current video. Returns nil if no video is loaded yet.
  */
-- (nullable NSString *)videoEmbedCode;
+- (void)requestVideoEmbedCode:(void (^)(NSString * _Nullable))completion;
 
 #pragma mark - Retrieving playlist information
 
@@ -669,18 +666,18 @@ typedef NS_ENUM(NSInteger, YTPlayerError) {
  * to the JavaScript API defined here:
  *   https://developers.google.com/youtube/iframe_api_reference#getPlaylist
  *
- * @return An NSArray containing all the video IDs in the current playlist. |nil| on error.
+ * @param completion block with An NSArray containing all the video IDs in the current playlist. |nil| on error.
  */
-- (nullable NSArray *)playlist;
+- (void)requestPlaylist:(void (^)(NSArray * _Nullable))completion;
 
 /**
  * Returns the 0-based index of the currently playing item in the playlist.
  * This method corresponds to the JavaScript API defined here:
  *   https://developers.google.com/youtube/iframe_api_reference#getPlaylistIndex
  *
- * @return The 0-based index of the currently playing item in the playlist.
+ * @param completion block with The 0-based index of the currently playing item in the playlist.
  */
-- (int)playlistIndex;
+- (void)requestPlaylistIndex:(void (^)(int))completion;
 
 #pragma mark - Exposed for Testing
 
